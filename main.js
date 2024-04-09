@@ -27,17 +27,18 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                 const state_name = entry.state;
                 const party = entry.party_simplified;
                 const votes = parseInt(entry.candidatevotes);
+                const votePercentage = (entry.candidatevotes*100 / entry.totalvotes).toFixed(2);
 
                 if (!winningParties[year]) {
                     winningParties[year] = {};
                 }
 
                 if (!winningParties[year][state]) {
-                    winningParties[year][state] = { state_name: '', party: '', votes: 0 };
+                    winningParties[year][state] = { state_name: '', party: '', votes: 0, votePercentage: 0.0 };
                 }
 
                 if (votes > winningParties[year][state].votes && (party === 'DEMOCRAT' || party === 'REPUBLICAN')) {
-                    winningParties[year][state] = { state_name, party, votes };
+                    winningParties[year][state] = { state_name, party, votes, votePercentage };
                 }
             });
             return winningParties;
@@ -75,6 +76,30 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                 .attr('winningParties', d => winningParties[yearSelected][d.id])
                 .style('stroke-width', 0.25)
                 .style('stroke', 'white');
+
+            electionStates = chloroplethSvg.selectAll('.electionState');
+
+            electionStates
+                .on("mouseover", (event, d) => {
+                    tooltip.style("opacity", 0.9);
+                    tooltip.html(d.properties.name + ": " + winningParties[yearSelected][d.id].party + ", " + winningParties[yearSelected][d.id].votePercentage + "%");
+
+                    d3.select(event.target)
+                        .style('stroke-width', 0.75)
+                        .style('stroke', 'black')
+                        .raise();
+                })
+                .on("mouseout", function (event, d) {
+                    tooltip.style("opacity", 0);
+
+                    d3.select(event.target)
+                        .style('stroke-width', 0.25)
+                        .style('stroke', 'white');
+                })
+                .on("mousemove", function (event, d) {
+                    tooltip.style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
         }
     })
 })
