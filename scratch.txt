@@ -1,0 +1,23 @@
+
+
+            electionStates = chloroplethSvg.selectAll('.electionState');
+
+            electionStates
+                .on("mouseover", (event, d) => {
+                    tooltip.style("opacity", 0.9);
+                    // tooltip.html(d[0] + ": " + d[1].toPrecision(3));
+                    console.log(d)
+
+                    d3.select(event.target)
+                        .style("opacity", hoveredOpacity);
+                })
+                .on("mouseout", function (event, d) {
+                    tooltip.style("opacity", 0);
+
+                    d3.select(event.target)
+                        .style('opacity', originalOpacity);
+                })
+                .on("mousemove", function (event, d) {
+                    tooltip.style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
