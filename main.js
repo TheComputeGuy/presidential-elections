@@ -18,34 +18,57 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
     d3.csv("presidents.csv").then(function (data) {
         // console.log(data);
 
+        // ------------------- Chloropleth -------------------
 
-        function getWinningPartiesPerStatePerYear(data) {
-            const winningParties = {};
-            data.forEach(entry => {
-                const year = entry.year;
-                const state = ("0" + entry.state_fips).slice(-2);
-                const state_name = entry.state;
-                const party = entry.party_simplified;
-                const votes = parseInt(entry.candidatevotes);
-                const votePercentage = (entry.candidatevotes*100 / entry.totalvotes).toFixed(2);
+        let winningParties_ = d3.rollups(data, (v) => {
+            let maxInd = d3.maxIndex(v, (d) => +d.candidatevotes);
+            return {
+                winner: v[maxInd].party_simplified,
+                state_name: v[maxInd].state
+            };
+        }, d => d.year, d => d.state_fips);
 
-                if (!winningParties[year]) {
-                    winningParties[year] = {};
+        let winningMargins_ = d3.rollups(data, (v) => {
+            let candidatevotes_ = [];
+            v.forEach(d => candidatevotes_.push(d.candidatevotes));
+            let votes_sorted = d3.sort(candidatevotes_, (a, b) => d3.descending(a.value, b.value));
+            return (votes_sorted[0] - votes_sorted[1])/v[0].totalvotes;
+        }, d => d.year, d => d.state_fips);
+
+        let winningParties = {};
+        winningParties_.forEach(yearEntry => {
+            let year_ = yearEntry[0].toString();
+
+            if (!winningParties[year_]) {
+                winningParties[year_] = {};
+            }
+            
+            yearEntry[1].forEach(stateEntry => {
+                let state_fip = ("0" + stateEntry[0]).slice(-2)
+                if (!winningParties[year_][state_fip]) {
+                    winningParties[year_][state_fip] = { 
+                        state_name: '', 
+                        party: '',
+                        winningPercentage: 0.0
+                    };
                 }
 
-                if (!winningParties[year][state]) {
-                    winningParties[year][state] = { state_name: '', party: '', votes: 0, votePercentage: 0.0 };
-                }
+                winningParties[year_][state_fip] = { 
+                    state_name: stateEntry[1].state_name, 
+                    party: stateEntry[1].winner
+                };
+            })
+        })
 
-                if (votes > winningParties[year][state].votes && (party === 'DEMOCRAT' || party === 'REPUBLICAN')) {
-                    winningParties[year][state] = { state_name, party, votes, votePercentage };
-                }
-            });
-            return winningParties;
-        }
+        winningMargins_.forEach(yearEntry => {
+            let year_ = yearEntry[0].toString();
 
-        // Preprocess the data
-        const winningParties = getWinningPartiesPerStatePerYear(data);
+            yearEntry[1].forEach(stateEntry => {
+                let state_fip = ("0" + stateEntry[0]).slice(-2)
+
+                winningParties[year_][state_fip].winningPercentage = (stateEntry[1]*100).toFixed(2);
+            })
+        })
 
         let yearSelected = "1976";
 
@@ -67,26 +90,37 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                 .join('path')
                 .attr('d', path)
                 .attr('class', 'electionState')
-                .style('fill', d => {
-                    const state = d.id;
-                    const year = yearSelected;
-                    const party = winningParties[year][state].party;
-                    return party === 'DEMOCRAT' ? blueHex : party === 'REPUBLICAN' ? redHex : 'green';
+                .classed('blue-state', d => {
+                    const party = winningParties[yearSelected][d.id].party;
+                    return party === 'DEMOCRAT';
                 })
+                .classed('red-state', d => {
+                    const party = winningParties[yearSelected][d.id].party;
+                    return party === 'REPUBLICAN';
+                })
+                // TODO - Fix styles
+                // .classed('flip', d => {
+                //     const party = winningParties[yearSelected][d.id].party;
+                //     const yearPrev = +yearSelected - 4;
+                //     if (yearPrev > 1975) {
+                //         return (winningParties[yearPrev.toString()][d.id].party != party);
+                //     }
+                // })
                 .attr('winningParties', d => winningParties[yearSelected][d.id])
                 .style('stroke-width', 0.25)
-                .style('stroke', 'white');
+                .style('stroke', 'white')
+                .raise();
 
             electionStates = chloroplethSvg.selectAll('.electionState');
 
             electionStates
                 .on("mouseover", (event, d) => {
                     tooltip.style("opacity", 0.9);
-                    tooltip.html(d.properties.name + ": " + winningParties[yearSelected][d.id].party + ", " + winningParties[yearSelected][d.id].votePercentage + "%");
+                    tooltip.html(d.properties.name + ": " + winningParties[yearSelected][d.id].party + ", " + winningParties[yearSelected][d.id].winningPercentage + "%");
 
                     d3.select(event.target)
-                        .style('stroke-width', 0.75)
-                        .style('stroke', 'black')
+                        .style('stroke-width', 2)
+                        .style('stroke', 'goldenrod')
                         .raise();
                 })
                 .on("mouseout", function (event, d) {
@@ -94,7 +128,8 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
 
                     d3.select(event.target)
                         .style('stroke-width', 0.25)
-                        .style('stroke', 'white');
+                        .style('stroke', 'white')
+                        .raise();
                 })
                 .on("mousemove", function (event, d) {
                     tooltip.style("left", (event.pageX + 10) + "px")

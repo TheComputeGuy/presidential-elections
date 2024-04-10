@@ -25,3 +25,16 @@ input[type="range"] {
     opacity: 0;
     /* transition: opacity 0.3s; */
 }
+
+.red-state {
+    fill: #cc0a11;
+}
+
+.blue-state {
+    fill: #25428f;
+}
+
+/* .flip {
+    stroke-width: 3.5 !important;
+    stroke: goldenrod !important;
+} */
