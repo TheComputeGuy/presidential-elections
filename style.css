@@ -34,6 +34,10 @@ input[type="range"] {
     fill: #25428f;
 }
 
+.other-state {
+    fill: green;
+}
+
 /* .flip {
     stroke-width: 3.5 !important;
     stroke: goldenrod !important;
@@ -45,4 +49,8 @@ input[type="range"] {
     font-family: Arial, Helvetica, sans-serif;
     pointer-events: none;
     dominant-baseline: central;
+}
+
+.tick > line, .axis > path {
+    stroke: none
 }
