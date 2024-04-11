@@ -152,8 +152,10 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
             d3.csv("electoral_college_2016.csv").then(function (ec_data) {
                 const applySimulation = (nodes) => {
                     const simulation = d3.forceSimulation(nodes)
+                        .force("x", d3.forceX().x(d => d.x).strength(0.03))
+                        .force("y", d3.forceY().y(d => d.y).strength(0.03))
                         .force("charge", d3.forceManyBody().strength(20))
-                        .force("collide", d3.forceCollide().radius(d => d.r + 1).strength(0.2))
+                        .force("collide", d3.forceCollide().radius(d => d.r + 1).strength(0.5))
                         .stop()
 
                     while (simulation.alpha() > 0.01) {
@@ -164,21 +166,11 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                     return simulation.nodes();
                 }
 
-                var path = d3.geoPath();
-
-                dorlingSvg.selectAll("path")
-                    .data(topojson.feature(us, us.objects.states).features)
-                    .enter().append("path")
-                    .attr("d", path)
-                    .attr("fill", "lightgray")
-                    .attr("stroke", "white")
-                    .attr("stroke-width", 0.5);
-
                 const states = topojson.feature(us, us.objects.states);
 
                 let radiusScale = d3.scaleLinear()
                     .domain(d3.extent(ec_data, (d) => +d.votes))
-                    .range([25, 80]);
+                    .range([20, 80]);
 
                 let ec_grouped_by_state = {}
                 ec_data.forEach((d) => {
@@ -202,8 +194,6 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                     feature.properties = { ...feature.properties, ...ec_grouped_by_state[name], x, y, r };
                 });
 
-                console.log(states.features)
-
                 const data = states.features.map((d) => d.properties)
                 const values = applySimulation(data)
                 const baseMap = dorlingSvg.node();
@@ -217,8 +207,7 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
 
                 bubbles_group = bubbles_group
                     .join("g")
-                    .classed('scatterBubbleGroup', true)
-                    .on("click", d => click(d))
+                    .classed('scatterBubbleGroup', true);
 
                 bubbles_group
                     .classed('scatterBubble', true)
@@ -236,6 +225,7 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                     .append('text')
                     .classed('stateText', true)
                     .text(d => d.state_po)
+                    .attr('font-size', d => radiusScale(d.votes) / 2)
 
                 bubbles_group
                     .selectAll('circle')
@@ -244,15 +234,14 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                         tooltip.html(d.name + ": " + d.votes);
 
                         d3.select(event.target)
-                            .style('stroke-width', 3)
+                            .style('stroke-width', 2)
                             .style('stroke', 'black');
                     })
                     .on("mouseout", function (event, d) {
                         tooltip.style("opacity", 0);
 
                         d3.select(event.target)
-                            .style('stroke-width', 0.25)
-                            .style('stroke', 'white');
+                            .style('stroke-width', 0);
 
                         d3.select(event.target)
                             .select('text')

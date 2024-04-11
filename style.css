@@ -44,4 +44,5 @@ input[type="range"] {
     fill: white;
     font-family: Arial, Helvetica, sans-serif;
     pointer-events: none;
+    dominant-baseline: central;
 }
