@@ -1,0 +1,52 @@
+state,state_po,state_fips,votes,D,R,O
+Alabama,AL,01,9,0,9,0
+Alaska,AK,02,3,0,3,0
+Arizona,AZ,04,11,0,11,0
+Arkansas,AR,05,6,0,6,0
+California,CA,06,55,55,0,0
+Colorado,CO,08,9,9,0,0
+Connecticut,CT,09,7,7,0,0
+Delaware,DE,10,3,3,0,0
+District of Columbia,DC,11,3,3,0,0
+Florida,FL,12,29,0,29,0
+Georgia,GA,13,16,0,16,0
+Hawaii,HI,15,4,3,0,1
+Idaho,ID,16,4,0,4,0
+Illinois,IL,17,20,20,0,0
+Indiana,IN,18,11,0,11,0
+Iowa,IA,19,6,0,6,0
+Kansas,KS,20,6,0,6,0
+Kentucky,KY,21,8,0,8,0
+Louisiana,LA,22,8,0,8,0
+Maine,ME,23,4,3,1,0
+Maryland,MD,24,10,10,0,0
+Massachusetts,MA,25,11,11,0,0
+Michigan,MI,26,16,0,16,0
+Minnesota,MN,27,10,10,0,0
+Mississippi,MS,28,6,0,6,0
+Missouri,MO,29,10,0,10,0
+Montana,MT,30,3,0,3,0
+Nebraska,NE,31,5,0,5,0
+Nevada,NV,32,6,6,0,0
+New Hampshire,NH,33,4,4,0,0
+New Jersey,NJ,34,14,14,0,0
+New Mexico,NM,35,5,5,0,0
+New York,NY,36,29,29,0,0
+North Carolina,NC,37,15,0,15,0
+North Dakota,ND,38,3,0,3,0
+Ohio,OH,39,18,0,18,0
+Oklahoma,OK,40,7,0,7,0
+Oregon,OR,41,7,7,0,0
+Pennsylvania,PA,42,20,0,20,0
+Rhode Island,RI,44,4,4,0,0
+South Carolina,SC,45,9,0,9,0
+South Dakota,SD,46,3,0,3,0
+Tennessee,TN,47,11,0,11,0
+Texas,TX,48,38,0,36,2
+Utah,UT,49,6,0,6,0
+Vermont,VT,50,3,3,0,0
+Virginia,VA,51,13,13,0,0
+Washington,WA,53,12,8,0,4
+West Virginia,WV,54,5,0,5,0
+Wisconsin,WI,55,10,0,10,0
+Wyoming,WY,56,3,0,3,0

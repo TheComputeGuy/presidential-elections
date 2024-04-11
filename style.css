@@ -38,3 +38,10 @@ input[type="range"] {
     stroke-width: 3.5 !important;
     stroke: goldenrod !important;
 } */
+
+.stateText {
+    text-anchor: middle;
+    fill: white;
+    font-family: Arial, Helvetica, sans-serif;
+    pointer-events: none;
+}
