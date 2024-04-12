@@ -22,19 +22,20 @@ const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip");
 
 d3.json('maps/states-albers-10m.json').then(function (us) {
-    d3.csv("presidents.csv").then(function (data) {
+    d3.csv("datasets/presidents.csv").then(function (data) {
         // console.log(data);
 
         // ---------------- Dorling Cartogram ----------------
 
         {
-            d3.csv("electoral_college_2016.csv").then(function (ec_data) {
+            d3.csv("datasets/electoral_college_2016.csv").then(function (ec_data) {
                 const applySimulation = (nodes) => {
                     const simulation = d3.forceSimulation(nodes)
                         .force("x", d3.forceX().x(d => d.x).strength(0.03))
                         .force("y", d3.forceY().y(d => d.y).strength(0.03))
                         .force("charge", d3.forceManyBody().strength(20))
-                        .force("collide", d3.forceCollide().radius(d => d.r + 1).strength(0.5))
+                        .force("collide", d3.forceCollide().radius(d => d.r + 2).strength(0.1))
+                        .alphaDecay(0.125)
                         .stop()
 
                     while (simulation.alpha() > 0.01) {
@@ -49,7 +50,7 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
 
                 let radiusScale = d3.scaleLinear()
                     .domain(d3.extent(ec_data, (d) => +d.votes))
-                    .range([20, 80]);
+                    .range([2 * 3, 2 * 55]);
 
                 let ec_grouped_by_state = {}
                 ec_data.forEach((d) => {
@@ -74,13 +75,12 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                 });
 
                 const simulation = d3.forceSimulation(states.features.map((d) => d.properties))
-                    .force("x", d3.forceX().x(d => d.x).strength(0.03))
-                    .force("y", d3.forceY().y(d => d.y).strength(0.03))
-                    .force("charge", d3.forceManyBody().strength(20))
-                    .force("collide", d3.forceCollide().radius(d => d.r + 1).strength(0.5))
+                    .force("x", d3.forceX().x(d => d.x))
+                    .force("y", d3.forceY().y(d => d.y))
+                    .force("charge", d3.forceManyBody().strength(50))
+                    .force("collide", d3.forceCollide().radius(d => d.r + 2))
+                    .alphaDecay(0.125)
                     .on('tick', ticked);
-
-                simulation.tick(1);
 
                 const bubbles = d3.select(dorlingSvg.node())
                     .append("g")

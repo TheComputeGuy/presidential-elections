@@ -1,11 +1,9 @@
 const chart_margin = { top: 30, right: 30, bottom: 70, left: 60 },
     chart_width = 1000 - chart_margin.left - chart_margin.right,
-    chart_height = 600 - chart_margin.top - chart_margin.bottom,
-    large_chart_height = 1000 - chart_margin.top - chart_margin.bottom;
+    chart_height = 600 - chart_margin.top - chart_margin.bottom;
 
 const width = chart_width + chart_margin.left + chart_margin.right;
 const height = chart_height + chart_margin.top + chart_margin.bottom;
-const large_height = large_chart_height + chart_margin.top + chart_margin.bottom;
 
 var main = d3.select("#main");
 
@@ -19,11 +17,11 @@ const dorlingSvg = d3.select("#dorling")
 
 const historicalSvg = d3.select("#historical-voting")
     .attr("width", width)
-    .attr("height", large_height);
+    .attr("height", height);
 
 const historicalStaticSvg = d3.select("#historical-static")
     .attr("width", width)
-    .attr("height", height / 2);
+    .attr("height", height);
 
 const swingSvg = d3.select("#swing-states")
     .attr("width", width)
@@ -316,16 +314,20 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                         let years = Object.keys(winningParties);
                         let state_names = Object.keys(winnersPerYearPerState_);
 
-                        let x = d3.scalePoint().domain(years).range([chart_margin.left * 2.5, width / 2 - chart_margin.right]);
-                        let y = d3.scaleBand().domain(state_names).range([chart_margin.top, large_height - chart_margin.bottom]).paddingInner(1);
+                        let x = d3.scalePoint().domain(state_names).range([chart_margin.left * 1.5, width - chart_margin.right]);
+                        let y = d3.scaleBand().domain(years).range([chart_margin.top, height - chart_margin.bottom * 2.5]).paddingInner(1);
 
-                        historicalSvg.append("g")
-                            .attr("transform", "translate(0," + (large_height - chart_margin.bottom + 10) + ")")
+                        const xAxisGroup = historicalSvg.append("g")
+                            .attr("transform", `translate(-12, ${(height - chart_margin.bottom * 2.1)})`)
                             .classed("axis", true)
                             .call(d3.axisBottom(x));
 
+                        xAxisGroup.selectAll('text')
+                            .attr("transform", "rotate(-90)")
+                            .attr("text-anchor", "end");
+
                         historicalSvg.append("g")
-                            .attr("transform", `translate(${chart_margin.left * 2.3},0)`)
+                            .attr("transform", `translate(${chart_margin.left * 1.2}, 0)`)
                             .classed("axis", true)
                             .call(d3.axisLeft(y));
 
@@ -335,8 +337,8 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                             .append("circle")
                             .classed("historical-vote", true)
                             .attr('r', 5)
-                            .attr('cx', d => x(d[1]))
-                            .attr('cy', d => y(d[0]))
+                            .attr('cx', d => x(d[0]))
+                            .attr('cy', d => y(d[1]))
                             .classed('blue-state', d => d[2] == 'D')
                             .classed('red-state', d => d[2] == 'R')
                             .classed('other-state', d => d[2] == 'O');
@@ -367,17 +369,21 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                         let staticStates = ['ALASKA', 'DISTRICT OF COLUMBIA', 'IDAHO', 'KANSAS',
                             'MINNESOTA', 'NEBRASKA', 'NORTH DAKOTA', 'OKLAHOMA', 'SOUTH DAKOTA', 'UTAH', 'WYOMING']
 
-                        let yStatic = d3.scaleBand().domain(staticStates).range([chart_margin.top, height / 2 - chart_margin.bottom]).paddingInner(1);
+                        let xStatic = d3.scaleBand().domain(staticStates).range([chart_margin.left * 1.5, width/2 - chart_margin.right]);
+
+                        const xAxisGroupStatic = historicalStaticSvg.append("g")
+                            .attr("transform", `translate(-29, ${(height - chart_margin.bottom * 2.1)})`)
+                            .classed("axis", true)
+                            .call(d3.axisBottom(xStatic));
+
+                        xAxisGroupStatic.selectAll('text')
+                            .attr("transform", "rotate(-90)")
+                            .attr("text-anchor", "end");
 
                         historicalStaticSvg.append("g")
-                            .attr("transform", "translate(0," + (height / 2 - chart_margin.bottom + 10) + ")")
+                            .attr("transform", `translate(${chart_margin.left * 1.2}, 0)`)
                             .classed("axis", true)
-                            .call(d3.axisBottom(x));
-
-                        historicalStaticSvg.append("g")
-                            .attr("transform", `translate(${chart_margin.left * 2.3},0)`)
-                            .classed("axis", true)
-                            .call(d3.axisLeft(yStatic));
+                            .call(d3.axisLeft(y));
 
                         historicalStaticSvg.selectAll(".historical-vote")
                             .data(winnersGrid.filter(d => staticStates.includes(d[0])))
@@ -385,8 +391,8 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                             .append("circle")
                             .classed("historical-vote", true)
                             .attr('r', 5)
-                            .attr('cx', d => x(d[1]))
-                            .attr('cy', d => yStatic(d[0]))
+                            .attr('cx', d => xStatic(d[0]))
+                            .attr('cy', d => y(d[1]))
                             .classed('blue-state', d => d[2] == 'D')
                             .classed('red-state', d => d[2] == 'R')
                             .classed('other-state', d => d[2] == 'O');
