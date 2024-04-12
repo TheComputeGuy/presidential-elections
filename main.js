@@ -416,61 +416,144 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                     // ------------------ County Voting ------------------
 
                     {
+                        const lowerLim = 20000;
+                        let processedResults = [];
 
-                        var path = d3.geoPath();
+                        cr_data.forEach((d) => {
+                            let winner = +d.votes_dem > +d.votes_gop ? 'D' : 'R';
+                            let diff = +d.diff.replaceAll(',', '') * (winner == 'D' ? -1 : 1);
+                            let per_point_diff = +d.per_point_diff.replaceAll('%', '') * (winner == 'D' ? -1 : 1);
+                            processedResults.push({
+                                ...d, winner, diff, per_point_diff
+                            })
+                        })
 
-                        let counties_ = topojson.feature(counties, counties.objects.counties);
+                        let radiusScale = d3.scaleSqrt()
+                            .domain(d3.extent(processedResults, d => d.total_votes))
+                            .range([0.02, 0.8]);
 
-                        countySvg.selectAll(".county")
-                            .data(topojson.feature(counties, counties.objects.counties).features)
-                            .enter()
-                            .append("path")
-                            .attr('class', 'county')
-                            .attr("d", path)
-                            .style("fill", "lightgray")
-                            .style("stroke", "white")
-                            .style("stroke-width", 0.5)
-                            .style('opacity', 0.5);
+                        let xScaleDem = d3.scaleLinear()
+                            .domain(d3.extent(processedResults.filter(d => d.winner == 'D' && d.total_votes > lowerLim), d => d.per_point_diff))
+                            .range([0.1 * width, 0.48 * width]);
+                        let xScaleRep = d3.scaleLinear()
+                            .domain(d3.extent(processedResults.filter(d => d.winner == 'R' && d.total_votes > lowerLim), d => d.per_point_diff))
+                            .range([0.52 * width, 0.9 * width]);
 
-                        countySvg.selectAll(".state")
-                            .data(topojson.feature(counties, counties.objects.states).features)
-                            .enter().append("path")
-                            .attr('class', 'state')
-                            .attr("d", path)
-                            .style("fill", "none")
-                            .style("stroke", "gray")
-                            .style("stroke-width", 0.5);
+                        let simulationLarge = d3.forceSimulation(processedResults.filter(d => d.total_votes > 100000))
+                            .force("center", d3.forceCenter(0.5 * width, 0.25 * height).strength(0.0001))
+                            .force("charge", d3.forceManyBody().strength(1))
+                            .force("collide", d3.forceCollide().radius(d => radiusScale(d.total_votes) + 2))
+                            .force("x", d3.forceX((d) => {
+                                return d.winner == 'D' ? xScaleDem(d.per_point_diff) : xScaleRep(d.per_point_diff)
+                            }).strength(1))
+                            .force("y", d3.forceY(0.25 * height))
+                            .alphaDecay(0.067)
+                            .on("tick", tickedLarge);
 
-                        let countyResultsMap = {};
+                        let simulationSmall = d3.forceSimulation(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
+                            .force("center", d3.forceCenter(0.5 * width, 0.75 * height).strength(0.0001))
+                            .force("charge", d3.forceManyBody().strength(1))
+                            .force("collide", d3.forceCollide().radius(d => radiusScale(d.total_votes) + 2))
+                            .force("x", d3.forceX((d) => {
+                                return d.winner == 'D' ? xScaleDem(d.per_point_diff) : xScaleRep(d.per_point_diff)
+                            }).strength(1))
+                            .force("y", d3.forceY(0.75 * height))
+                            .alphaDecay(0.067)
+                            .on("tick", tickedSmall);
 
-                        cr_data.forEach((crEntry) => {
-                            countyResultsMap[("00000" + crEntry.combined_fips).slice(-5)] = crEntry;
-                        });
+                        function tickedLarge() {
+                            countySvg
+                                .selectAll('.highVotes')
+                                .data(processedResults.filter(d => d.total_votes > 100000))
+                                .join("circle")
+                                .classed('highVotes', true)
+                                .attr('r', d => radiusScale(d.total_votes))
+                                .attr('cx', d => d.x)
+                                .attr('cy', d => d.y)
+                                .attr("fill", d => d.winner == 'D' ? "#0000ff" : "#ff0803")
+                                .attr("stroke", d => d.winner == 'D' ? "#0000ff" : "#ff0803");
 
-                        let lengthScale = d3.scaleLog()
-                            .domain(d3.extent(cr_data, (d) => +d.diff.replaceAll(',', '')))
-                            .range([1, 30]);
+                            countySvg
+                                .selectAll('.highVotes')
+                                .on("mouseover", (event, d) => {
+                                    tooltip.style("opacity", 0.9);
+                                    tooltip.html(`${d.winner} has a ${Math.abs(d.per_point_diff)}% winning margin`);
 
-                        counties_.features.forEach((feature) => {
-                            const [x, y] = d3.geoPath().centroid(feature);
-                            if (countyResultsMap[feature.id]) {
-                                const l = lengthScale(+countyResultsMap[feature.id].diff.replaceAll(',', ''))
-                                feature.properties = { ...feature.properties, ...countyResultsMap[feature.id], x, y, l };
-                            } else {
-                                feature.properties = { ...feature.properties, x, y, l: 0, diff: '0', total_votes: 0 };
-                            }
-                        });
+                                    d3.select(event.target)
+                                        .style('stroke-width', 2)
+                                        .style('stroke', 'black');
+                                })
+                                .on("mouseout", function (event, d) {
+                                    tooltip.style("opacity", 0);
 
-                        const data = counties_.features.map((d) => d.properties)
+                                    d3.select(event.target)
+                                        .style('stroke-width', 0);
 
-                        countySvg.append('g')
-                            .selectAll('path')
-                            .data(data)
-                            .join("path")
-                            .attr("transform", d => `translate(${d.x}, ${d.y})`)
-                            .attr("d", d => d.votes_dem > d.votes_gop ? `M4,0 L0,${-d.l}` : `M-4,0 L0,${-d.l}`)
-                            .attr("fill", d => d.votes_dem > d.votes_gop ? "#0000ff" : "#ff0803")
-                            .attr("stroke", d => d.votes_dem > d.votes_gop ? "#0000ff" : "#ff0803");
+                                    d3.select(event.target)
+                                        .select('text')
+                                        .classed('stateText', true);
+                                })
+                                .on("mousemove", function (event, d) {
+                                    tooltip.style("left", (event.pageX + 10) + "px")
+                                        .style("top", (event.pageY - 28) + "px");
+                                })
+                        }
+
+                        function tickedSmall() {
+                            countySvg
+                                .selectAll('.lessVotes')
+                                .data(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
+                                .join("circle")
+                                .classed('lessVotes', true)
+                                .attr('r', d => radiusScale(d.total_votes))
+                                .attr('cx', d => d.x)
+                                .attr('cy', d => d.y)
+                                .attr("fill", d => d.winner == 'D' ? "#0000ff" : "#ff0803")
+                                .attr("stroke", d => d.winner == 'D' ? "#0000ff" : "#ff0803");
+
+                            countySvg
+                                .selectAll('.lessVotes')
+                                .on("mouseover", (event, d) => {
+                                    tooltip.style("opacity", 0.9);
+                                    tooltip.html(`${d.winner} has a ${Math.abs(d.per_point_diff)}% winning margin`);
+
+                                    d3.select(event.target)
+                                        .style('stroke-width', 2)
+                                        .style('stroke', 'black');
+                                })
+                                .on("mouseout", function (event, d) {
+                                    tooltip.style("opacity", 0);
+
+                                    d3.select(event.target)
+                                        .style('stroke-width', 0);
+
+                                    d3.select(event.target)
+                                        .select('text')
+                                        .classed('stateText', true);
+                                })
+                                .on("mousemove", function (event, d) {
+                                    tooltip.style("left", (event.pageX + 10) + "px")
+                                        .style("top", (event.pageY - 28) + "px");
+                                })
+                        }
+
+                        countySvg
+                            .append('line')
+                            .attr('x1', width / 2)
+                            .attr('x2', width / 2)
+                            .attr('y1', 0)
+                            .attr('y2', height)
+                            .style('stroke', 'black')
+                            .style('stroke-dasharray', '4 4')
+
+                        countySvg
+                            .append('line')
+                            .attr('y1', height / 2)
+                            .attr('y2', height / 2)
+                            .attr('x1', 0)
+                            .attr('x2', width)
+                            .style('stroke', 'black')
+                            .style('stroke-dasharray', '4 4')
                     }
                 })
             })
