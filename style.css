@@ -38,11 +38,6 @@ input[type="range"] {
     fill: green;
 }
 
-/* .flip {
-    stroke-width: 3.5 !important;
-    stroke: goldenrod !important;
-} */
-
 .stateText {
     text-anchor: middle;
     fill: white;

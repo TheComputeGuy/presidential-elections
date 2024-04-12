@@ -23,9 +23,13 @@ const historicalSvg = d3.select("#historical-voting")
 
 const historicalStaticSvg = d3.select("#historical-static")
     .attr("width", width)
-    .attr("height", height/2);
+    .attr("height", height / 2);
 
 const swingSvg = d3.select("#swing-states")
+    .attr("width", width)
+    .attr("height", height);
+
+const countySvg = d3.select("#county-votes")
     .attr("width", width)
     .attr("height", height);
 
@@ -109,14 +113,6 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                                 const party = winningParties[yearSelected][d.id].party;
                                 return party === 'REPUBLICAN';
                             })
-                            // TODO - Fix styles
-                            // .classed('flip', d => {
-                            //     const party = winningParties[yearSelected][d.id].party;
-                            //     const yearPrev = +yearSelected - 4;
-                            //     if (yearPrev > 1975) {
-                            //         return (winningParties[yearPrev.toString()][d.id].party != party);
-                            //     }
-                            // })
                             .attr('winningParties', d => winningParties[yearSelected][d.id])
                             .style('stroke-width', 0.25)
                             .style('stroke', 'white')
@@ -277,6 +273,13 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                         let yearSelected = "2016";
 
                         updateChloroplethStates(swingSvg, winningParties, yearSelected);
+
+                        let opacityScale = d3.scaleLinear()
+                            .domain(d3.extent(Object.keys(winningParties[yearSelected]), (d) => winningParties[yearSelected][d].winningPercentage))
+                            .range([0.3, 1]);
+
+                        swingSvg.selectAll('path')
+                            .style('opacity', (d) => opacityScale(winningParties[yearSelected][d.id].winningPercentage));
                     }
 
                     // ---------------- Historical Voting ----------------
@@ -361,13 +364,13 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
 
                         // Historically static
 
-                        let staticStates = ['ALASKA', 'DISTRICT OF COLUMBIA', 'IDAHO', 'KANSAS', 
-                        'MINNESOTA', 'NEBRASKA', 'NORTH DAKOTA', 'OKLAHOMA', 'SOUTH DAKOTA', 'UTAH', 'WYOMING']
+                        let staticStates = ['ALASKA', 'DISTRICT OF COLUMBIA', 'IDAHO', 'KANSAS',
+                            'MINNESOTA', 'NEBRASKA', 'NORTH DAKOTA', 'OKLAHOMA', 'SOUTH DAKOTA', 'UTAH', 'WYOMING']
 
-                        let yStatic = d3.scaleBand().domain(staticStates).range([chart_margin.top, height/2 - chart_margin.bottom]).paddingInner(1);
+                        let yStatic = d3.scaleBand().domain(staticStates).range([chart_margin.top, height / 2 - chart_margin.bottom]).paddingInner(1);
 
                         historicalStaticSvg.append("g")
-                            .attr("transform", "translate(0," + (height/2 - chart_margin.bottom + 10) + ")")
+                            .attr("transform", "translate(0," + (height / 2 - chart_margin.bottom + 10) + ")")
                             .classed("axis", true)
                             .call(d3.axisBottom(x));
 
@@ -408,6 +411,66 @@ d3.json('maps/states-albers-10m.json').then(function (us) {
                                 tooltip.style("left", (event.pageX + 10) + "px")
                                     .style("top", (event.pageY - 28) + "px");
                             })
+                    }
+
+                    // ------------------ County Voting ------------------
+
+                    {
+
+                        var path = d3.geoPath();
+
+                        let counties_ = topojson.feature(counties, counties.objects.counties);
+
+                        countySvg.selectAll(".county")
+                            .data(topojson.feature(counties, counties.objects.counties).features)
+                            .enter()
+                            .append("path")
+                            .attr('class', 'county')
+                            .attr("d", path)
+                            .style("fill", "lightgray")
+                            .style("stroke", "white")
+                            .style("stroke-width", 0.5)
+                            .style('opacity', 0.5);
+
+                        countySvg.selectAll(".state")
+                            .data(topojson.feature(counties, counties.objects.states).features)
+                            .enter().append("path")
+                            .attr('class', 'state')
+                            .attr("d", path)
+                            .style("fill", "none")
+                            .style("stroke", "gray")
+                            .style("stroke-width", 0.5);
+
+                        let countyResultsMap = {};
+
+                        cr_data.forEach((crEntry) => {
+                            countyResultsMap[("00000" + crEntry.combined_fips).slice(-5)] = crEntry;
+                        });
+
+                        let lengthScale = d3.scaleLog()
+                            .domain(d3.extent(cr_data, (d) => +d.diff.replaceAll(',', '')))
+                            .range([1, 30]);
+
+                        counties_.features.forEach((feature) => {
+                            const [x, y] = d3.geoPath().centroid(feature);
+                            if (countyResultsMap[feature.id]) {
+                                const l = lengthScale(+countyResultsMap[feature.id].diff.replaceAll(',', ''))
+                                feature.properties = { ...feature.properties, ...countyResultsMap[feature.id], x, y, l };
+                            } else {
+                                feature.properties = { ...feature.properties, x, y, l: 0, diff: '0', total_votes: 0 };
+                            }
+                        });
+
+                        const data = counties_.features.map((d) => d.properties)
+
+                        countySvg.append('g')
+                            .selectAll('path')
+                            .data(data)
+                            .join("path")
+                            .attr("transform", d => `translate(${d.x}, ${d.y})`)
+                            .attr("d", d => d.votes_dem > d.votes_gop ? `M4,0 L0,${-d.l}` : `M-4,0 L0,${-d.l}`)
+                            .attr("fill", d => d.votes_dem > d.votes_gop ? "#0000ff" : "#ff0803")
+                            .attr("stroke", d => d.votes_dem > d.votes_gop ? "#0000ff" : "#ff0803");
                     }
                 })
             })
