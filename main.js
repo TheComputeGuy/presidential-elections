@@ -8,7 +8,6 @@ const height = chart_height + chart_margin.top + chart_margin.bottom;
 const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip");
 
-const heroSvg = d3.select("#hero");
 let main = d3.select("main");
 let scrolly = main.select("#scrolly");
 let svg = scrolly.select("#hero");
@@ -170,8 +169,7 @@ function init() {
     scroller
         .setup({
             step: "#scrolly article .step",
-            offset: 0.33,
-            // debug: true
+            offset: 0.33
         })
         .onStepEnter(handleStepEnter);
 
@@ -248,7 +246,7 @@ function stopSimulations() {
 }
 
 function clean() {
-    heroSvg.selectAll('*').remove();
+    svg.selectAll('*').remove();
     tooltip.style("opacity", 0);
     if (simulationLarge){
         stopSimulations();
@@ -259,7 +257,7 @@ function clean() {
 function createHistoricalCholoropleth() {
     let yearSelected = "2016";
 
-    updateChloroplethStates(heroSvg, winningParties, yearSelected);
+    updateChloroplethStates(svg, winningParties, yearSelected);
 
     let demVotes = d3.sum(data.filter(d => d.year == yearSelected && d.party_simplified == 'DEMOCRAT'), d => +d.candidatevotes);
     let repVotes = d3.sum(data.filter(d => d.year == yearSelected && d.party_simplified == 'REPUBLICAN'), d => +d.candidatevotes);
@@ -291,12 +289,6 @@ function createHistoricalCholoropleth() {
         .attr('y', 30)
         .text(`${(repVotes / totalVotes).toFixed(2) * 100}%`)
         .attr('class', 'bar-annotation');
-
-    // const yearSelect = d3.select("#year-selector")
-    // yearSelect.on("input", function (event) {
-    //     yearSelected = this.value;
-    //     updateChloroplethStates(chloroplethSvg, winningParties, yearSelected);
-    // });
 }
 
 function createDorlingCartogram() {
@@ -345,7 +337,7 @@ function createDorlingCartogram() {
 
     const data = states.features.map((d) => d.properties)
     const values = applySimulation(data)
-    const baseMap = heroSvg.node();
+    const baseMap = svg.node();
 
     const bubbles = d3.select(baseMap)
         .append("g")
@@ -446,19 +438,18 @@ function createDorlingCartogram() {
         .attr('y', 90)
         .text('270')
         .attr('font-weight', 'bold');
-
 }
 
 function createSwingStatesChloropleth() {
     let yearSelected = "2016";
 
-    updateChloroplethStates(heroSvg, winningParties, yearSelected);
+    updateChloroplethStates(svg, winningParties, yearSelected);
 
     let opacityScale = d3.scaleLinear()
         .domain(d3.extent(Object.keys(winningParties[yearSelected]), (d) => winningParties[yearSelected][d].winningPercentage))
         .range([0.3, 1]);
 
-    heroSvg.selectAll('path')
+    svg.selectAll('path')
         .style('opacity', (d) => opacityScale(winningParties[yearSelected][d.id].winningPercentage));
 }
 
@@ -469,11 +460,11 @@ function createHistoricalVotingChart() {
     let y = d3.scaleBand().domain(years).range([chart_margin.top, height - chart_margin.bottom * 2.5]).paddingInner(1);
     let x = d3.scalePoint().domain(state_names).range([chart_margin.left * 1.5, width - chart_margin.right]);
 
-    heroSvg.append("g")
+    svg.append("g")
         .attr('transform', `translate(-20, 0)`)
         .classed('chart-container', true);
 
-    let container = heroSvg.select('.chart-container');
+    let container = svg.select('.chart-container');
 
     const xAxisGroup = container.append("g")
         .attr("transform", `translate(-12, ${(height - chart_margin.bottom * 2.1)})`)
@@ -534,11 +525,11 @@ function createHistoricalStaticVotingChart() {
 
     let xStatic = d3.scaleBand().domain(staticStates).range([chart_margin.left * 1.5, width / 2 - chart_margin.right]);
 
-    heroSvg.append("g")
+    svg.append("g")
         .attr('transform', `translate(${width / 4}, 0)`)
         .classed('chart-container', true);
 
-    let container = heroSvg.select('.chart-container');
+    let container = svg.select('.chart-container');
 
     const xAxisGroupStatic = container.append("g")
         .attr("transform", `translate(-29, ${(height - chart_margin.bottom * 2.1)})`)
@@ -600,10 +591,10 @@ function createRecentStaticVotingChart() {
 
     let xStatic = d3.scaleBand().domain(staticStates).range([chart_margin.left * 1.5, width - chart_margin.right]);
 
-    heroSvg.append("g")
+    svg.append("g")
         .classed('chart-container', true);
 
-    let container = heroSvg.select('.chart-container')
+    let container = svg.select('.chart-container')
         .attr('transform', `translate(-10, -50)`);
 
     const xAxisGroupStatic = container.append("g")
@@ -701,7 +692,7 @@ function createCountyVotingChart() {
     function tickedLarge() {
         simulationLarge.tick(skipTicks);
 
-        heroSvg
+        svg
             .selectAll('.highVotes')
             .data(processedResults.filter(d => d.total_votes > 100000))
             .join("circle")
@@ -712,7 +703,7 @@ function createCountyVotingChart() {
             .attr("fill", d => d.winner == 'D' ? "#0000ff" : "#ff0803")
             .attr("stroke", d => d.winner == 'D' ? "#0000ff" : "#ff0803");
 
-        heroSvg
+        svg
             .selectAll('.highVotes')
             .on("mouseover", (event, d) => {
                 tooltip.style("opacity", 0.9);
@@ -741,7 +732,7 @@ function createCountyVotingChart() {
     function tickedSmall() {
         simulationSmall.tick(skipTicks);
 
-        heroSvg
+        svg
             .selectAll('.lessVotes')
             .data(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
             .join("circle")
@@ -752,7 +743,7 @@ function createCountyVotingChart() {
             .attr("fill", d => d.winner == 'D' ? "#0000ff" : "#ff0803")
             .attr("stroke", d => d.winner == 'D' ? "#0000ff" : "#ff0803");
 
-        heroSvg
+        svg
             .selectAll('.lessVotes')
             .on("mouseover", (event, d) => {
                 tooltip.style("opacity", 0.9);
@@ -780,7 +771,7 @@ function createCountyVotingChart() {
 
     const PADDING = 30;
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', width / 2)
         .attr('x2', width / 2)
@@ -789,7 +780,7 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '4 4')
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', xScaleDem(-50))
         .attr('x2', xScaleDem(-50))
@@ -798,7 +789,7 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '2 2')
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', xScaleRep(50))
         .attr('x2', xScaleRep(50))
@@ -807,7 +798,7 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '2 2')
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', width / 2)
         .attr('x2', width / 2)
@@ -816,7 +807,7 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '4 4')
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', xScaleDem(-50))
         .attr('x2', xScaleDem(-50))
@@ -825,7 +816,7 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '2 2')
 
-    heroSvg
+    svg
         .append('line')
         .attr('x1', xScaleRep(50))
         .attr('x2', xScaleRep(50))
@@ -834,31 +825,31 @@ function createCountyVotingChart() {
         .style('stroke', 'black')
         .style('stroke-dasharray', '2 2')
 
-    heroSvg.append('text')
+    svg.append('text')
         .text("50% Democratic Win Margin")
         .attr('x', xScaleDem(-50))
         .attr('y', 0.5 * height)
         .classed('distribution-label', true);
 
-    heroSvg.append('text')
+    svg.append('text')
         .text("0%")
         .attr('x', 0.5 * width)
         .attr('y', 0.5 * height)
         .classed('distribution-label', true);
 
-    heroSvg.append('text')
+    svg.append('text')
         .text("50% Republican Win Margin")
         .attr('x', xScaleRep(+50))
         .attr('y', 0.5 * height)
         .classed('distribution-label', true);
 
-    heroSvg.append('text')
+    svg.append('text')
         .text("Counties with Total Votes > 100k")
         .attr('x', 0.5 * width)
         .attr('y', 50)
         .classed('distribution-title', true);
 
-    heroSvg.append('text')
+    svg.append('text')
         .text("Counties with Total Votes < 100k")
         .attr('x', 0.5 * width)
         .attr('y', height - 34)
