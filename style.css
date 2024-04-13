@@ -2,21 +2,6 @@
     font-family: Roboto, Arial, Helvetica, sans-serif;
 }
 
-datalist {
-    display: flex;
-    justify-content: space-between;
-    width: 500px;
-}
-
-option {
-    padding: 0;
-}
-
-input[type="range"] {
-    width: 500px;
-    margin: 0;
-}
-
 .tooltip {
     position: absolute;
     text-align: center;
@@ -49,8 +34,8 @@ input[type="range"] {
     dominant-baseline: central;
 }
 
-.tick>line,
-.axis>path {
+.tick > line,
+.axis > path {
     stroke: none
 }
 
@@ -92,7 +77,7 @@ input[type="range"] {
         padding: 1rem;
     }
 
-    #scrolly>* {
+    #scrolly > * {
         -webkit-box-flex: 1;
         -ms-flex: 1;
         flex: 1;
