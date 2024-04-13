@@ -3,49 +3,101 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Understanding Presidential Elections</title>
+    <title>A newbie's guide to the US Presidential Elections</title>
     <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
-    <div id="main">
-        <div id="yearly-analysis">
-            <label for="year">Year</label><br />
-            <input type="range" id="year-selector" name="year" list="markers" min="1976" max="2020" step="4"
-                value="1976" />
-            <datalist id="markers">
-                <option value="1976" label="1976"></option>
-                <option value="1980" label="1980"></option>
-                <option value="1984" label="1984"></option>
-                <option value="1988" label="1988"></option>
-                <option value="1992" label="1992"></option>
-                <option value="1996" label="1996"></option>
-                <option value="2000" label="2000"></option>
-                <option value="2004" label="2004"></option>
-                <option value="2008" label="2008"></option>
-                <option value="2012" label="2012"></option>
-                <option value="2016" label="2016"></option>
-                <option value="2020" label="2020"></option>
-            </datalist>
-            <svg id="yearly-chloropleth"></svg>
-        </div>
-        <div id="electoral-college">
-            <svg id="dorling"></svg>
-        </div>
-        <div id="historical-voting-container">
-            <svg id="historical-voting"></svg>
-            <svg id="historical-static"></svg>
-        </div>
-        <div id="swing-states-container">
-            <svg id="swing-states"></svg>
-        </div>
-        <div id="county-votes-container">
-            <svg id="county-votes"></svg>
-        </div>
-    </div>
+    <main>
+
+        <section id="intro">
+            <h1 class="intro__hed">A newbie's guide to the 🇺🇸 Presidential Elections</h1>
+            <p class="intro__dek">
+                As the heat rises over the 2024 US Presidential Elections, you'll see a lot of interesting terms in the
+                media.
+                Let's take a look at what the Presidential Elections are and some interesting quirks with the process!
+                <br><br>
+                We'll make use of data from Donald Trump's winning 2016 bid to understand the different aspects of this
+                process. Scroll away!
+            </p>
+        </section>
+
+        <section id="scrolly">
+            <svg id="hero">
+                <text>0</text>
+            </svg>
+
+            <article>
+                <div class="step" data-step="0">
+                    <p class='p0'>
+                        The elections for the President of the United States take place every four years, with the
+                        registered voters in each state and D.C. casting their ballots on <abbr
+                            title="the Tuesday next after the first Monday in November, i.e. the Tuesday that occurs within November 2 to November 8.">Election
+                            Day</abbr>.<br />
+                        But the election is a lot more complex than this. Let's see why!
+                    </p>
+                </div>
+                <div class="step" data-step="1">
+                    <h1>The Popular Vote</h1>
+                    <p class='p1'>
+                        On the left, we can see how people in each state voted in the 2016 Presidential Election. Hover
+                        over the states to see more information. The bar at the top shows the popular vote distribution
+                        between the two big candidates from the Democratic Party (blue) and the Republican Party (red).
+                        <br><br>
+
+                        We see that Democrats swept the popular vote with a 48% share, with Republicans falling short at
+                        46%.<br><br>
+                        <em>But</em><br>
+                        Donald Trump, the Republican candidate became the President in 2016. How so?
+                    </p>
+                </div>
+                <div class="step" data-step="2">
+                    <h1>The Electoral College</h1>
+                    <p class='p2'>
+                        Behind that magic is the concept of the Electoral College. Simply relying on popular vote would
+                        mean that big cities and populous states would have an outsized impact on the Presidential
+                        election, with the smaller states' voice possibly getting sidelined. To avoid this, the Founding
+                        Fathers decided to make the Presidential election as an indirect election.<br><br>
+
+                        When voters vote on Election Day, they are voting to elect the Electoral College, not
+                        the President and the Vice-President directly. Every state gets a certain number of electors -
+                        one for each congressional district - with small states getting at least 3 electors, giving a
+                        total of <b>538</b> votes. These electors then meet to elect the President and Vice President in
+                        December. Therefore, to win, the candidate needs to win a simple majority, i.e. cross the
+                        <b>270</b> barrier.<br><br>
+
+                        Fun Fact - Except Nebraska and Maine, all states require a 'winner-takes-all' voting, wherein
+                        all the electors in a state are required to vote for the candidate that won the popular vote.
+                        Though it can be said that this is similar to simply using the popular vote, it has the effect
+                        of giving smaller states a larger say in the Presidential vote and dampening down the impact of
+                        popular vote from large cities.<br><br>
+
+                        The chart on the left shows the electoral votes that each state had for the 2016 election. We
+                        can see that the Republicans were able to successfully win many states , and though Democrats
+                        won big states, they were unable to amass enough electoral votes to win the election.
+                    </p>
+                </div>
+                <div class="step" data-step="3">
+                    <p class='p3'>My story paragraph 3</p>
+                </div>
+                <div class="step" data-step="4">
+                    <p class='p4'>My story paragraph 4</p>
+                </div>
+                <div class="step" data-step="5">
+                    <p class='p4'>My story paragraph 5</p>
+                </div>
+                <div class="step" data-step="6">
+                    <p class='p4'>My story paragraph 6</p>
+                </div>
+            </article>
+        </section>
+
+        <section id="outro"></section>
+    </main>
 </body>
 <script src="https://d3js.org/d3.v6.min.js"></script>
 <script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="https://unpkg.com/scrollama"></script>
 <script src="./main.js"></script>
 
 </html>

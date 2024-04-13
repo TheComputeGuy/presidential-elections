@@ -1,3 +1,7 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 datalist {
     display: flex;
     justify-content: space-between;
@@ -46,6 +50,89 @@ input[type="range"] {
     dominant-baseline: central;
 }
 
-.tick > line, .axis > path {
+.tick>line,
+.axis>path {
     stroke: none
+}
+
+/* Scroll */
+
+#scrolly {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    background-color: #f3f3f3;
+    padding: 1rem;
+}
+
+#scrolly>* {
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+}
+
+article {
+    position: relative;
+    padding: 0 1rem;
+    max-width: 26rem;
+}
+
+svg {
+    position: -webkit-sticky;
+    position: sticky;
+    width: 100%;
+    margin: 0;
+    -webkit-transform: translate3d(0, 0, 0);
+    -moz-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    background-color: #fff;
+    z-index: 0;
+    padding-left: 1rem;
+    padding-top: 1rem;
+}
+
+.step {
+    margin: 0 auto 2rem auto;
+    background-color: #3b3b3b;
+    color: #fff;
+}
+
+.step:last-child {
+    margin-bottom: 0;
+}
+
+.step.is-active {
+    background-color: goldenrod;
+    color: #3b3b3b;
+}
+
+.step p {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.25rem;
+}
+
+.step h1 {
+    text-align: center;
+    font-weight: bold;
+    font-size: 2rem;
+    padding-top: 1rem;
+}
+
+.distribution-label {
+    text-anchor: middle;
+    font-size: 1rem;
+}
+
+.distribution-title {
+    text-anchor: middle;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.bar-annotation {
+    text-anchor: middle;
+    fill: white;
+    font-weight: bold;
 }
