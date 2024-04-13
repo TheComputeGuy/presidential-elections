@@ -1,5 +1,5 @@
 * {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Roboto, Arial, Helvetica, sans-serif;
 }
 
 datalist {
@@ -27,7 +27,6 @@ input[type="range"] {
     border-radius: 8px;
     pointer-events: none;
     opacity: 0;
-    /* transition: opacity 0.3s; */
 }
 
 .red-state {
@@ -57,25 +56,53 @@ input[type="range"] {
 
 /* Scroll */
 
-#scrolly {
-    position: relative;
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    background-color: #f3f3f3;
-    padding: 1rem;
+@media (max-width: 1023px) {
+    #scrolly {
+        position: relative;
+        padding: 1rem;
+    }
+
+    article {
+        position: relative;
+        padding: 0;
+        max-width: 26rem;
+        margin: 0 auto;
+    }
+
+    svg {
+        left: 0;
+    }
+
+    .step {
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+    }
+
+    .step h1 {
+        padding: 0 1rem;
+    }
 }
 
-#scrolly>* {
-    -webkit-box-flex: 1;
-    -ms-flex: 1;
-    flex: 1;
-}
+@media (min-width: 1024px) {
+    #scrolly {
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        padding: 1rem;
+    }
 
-article {
-    position: relative;
-    padding: 0 1rem;
-    max-width: 26rem;
+    #scrolly>* {
+        -webkit-box-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+    }
+
+    article {
+        position: relative;
+        padding: 0 1rem;
+        max-width: 26rem;
+    }
 }
 
 svg {
@@ -93,9 +120,13 @@ svg {
 }
 
 .step {
-    margin: 0 auto 2rem auto;
-    background-color: #3b3b3b;
-    color: #fff;
+    margin: 0 auto 4rem auto;
+    /* background-color: #3b3b3b;
+    color: #fff; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0.2;
 }
 
 .step:last-child {
@@ -103,21 +134,22 @@ svg {
 }
 
 .step.is-active {
-    background-color: goldenrod;
-    color: #3b3b3b;
+    /* background-color: goldenrod;
+    color: #3b3b3b; */
+    opacity: 1;
 }
 
 .step p {
     text-align: center;
     padding: 1rem;
     font-size: 1.25rem;
+    margin: 0;
 }
 
 .step h1 {
     text-align: center;
     font-weight: bold;
     font-size: 2rem;
-    padding-top: 1rem;
 }
 
 .distribution-label {
@@ -135,4 +167,18 @@ svg {
     text-anchor: middle;
     fill: white;
     font-weight: bold;
+}
+
+#intro, #outro {
+    padding: 0 1rem;
+}
+
+.narration__header {
+    text-align: center;
+    font-size: 2rem;
+    font-family: Raleway;
+}
+
+.narration__body {
+    font-size: 1.2rem;
 }

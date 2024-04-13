@@ -19,6 +19,8 @@ let step = article.selectAll(".step");
 let scroller = scrollama();
 
 let us, data, ec_data, cr_data, winningParties_, winningMargins_, winningParties;
+let winnersPerYearPerState_ = {}, winnersGrid = [];
+let simulationLarge, simulationSmall;
 
 // Initialize data and maps
 d3.json('maps/states-albers-10m.json').then(function (us_in) {
@@ -81,6 +83,31 @@ d3.json('maps/states-albers-10m.json').then(function (us_in) {
                         winningParties[year_][state_fip].winningPercentage = (stateEntry[1] * 100).toFixed(2);
                     })
                 });
+
+                winningParties_.forEach((yearEntry) => {
+                    let year_ = yearEntry[0];
+
+                    yearEntry[1].forEach((stateEntry) => {
+                        let state_ = stateEntry[1].state_name;
+                        let winner = stateEntry[1].winner == 'DEMOCRAT' ? 'D' : stateEntry[1].winner == 'REPUBLICAN' ? 'R' : 'O';
+
+                        if (!winnersPerYearPerState_[state_]) {
+                            winnersPerYearPerState_[state_] = {};
+                        }
+
+                        if (!winnersPerYearPerState_[state_][year_]) {
+                            winnersPerYearPerState_[state_][year_] = '';
+                        }
+
+                        winnersPerYearPerState_[state_][year_] = winner;
+                    })
+                })
+
+                Object.keys(winnersPerYearPerState_).forEach((state__) => {
+                    Object.keys(winnersPerYearPerState_[state__]).forEach((year__) => {
+                        winnersGrid.push([state__, year__, winnersPerYearPerState_[state__][year__]]);
+                    })
+                })
             })
         })
     })
@@ -96,7 +123,7 @@ function handleStepEnter(response) {
     // update graphic based on step
     switch (response.index) {
         case 0:
-            heroSvg.selectAll('*').remove();
+            clean();
             svg.append('image')
                 .attr('xlink:href', 'assets/potus_seal.svg')
                 .attr('x', width / 2 - 250)
@@ -105,31 +132,35 @@ function handleStepEnter(response) {
                 .attr('height', 500);
             break;
         case 1:
-            heroSvg.selectAll('*').remove();
+            clean();
             createHistoricalCholoropleth();
             break;
         case 2:
-            heroSvg.selectAll('*').remove();
+            clean();
             createDorlingCartogram();
             break;
         case 3:
-            heroSvg.selectAll('*').remove();
-            createSwingStatesChloropleth();
-            break;
-        case 4:
-            heroSvg.selectAll('*').remove();
+            clean();
             createHistoricalVotingChart();
             break;
-        case 5:
-            heroSvg.selectAll('*').remove();
+        case 4:
+            clean();
             createHistoricalStaticVotingChart();
             break;
+        case 5:
+            clean();
+            createRecentStaticVotingChart();
+            break;
         case 6:
-            heroSvg.selectAll('*').remove();
+            clean();
+            createSwingStatesChloropleth();
+            break;
+        case 7:
+            clean();
             createCountyVotingChart();
             break;
         default:
-            heroSvg.selectAll('*').remove();
+            clean();
             break;
     }
 }
@@ -162,6 +193,7 @@ function handleResize() {
     scroller.resize();
 }
 
+// Helper functions
 function updateChloroplethStates(svg_, winningParties, yearSelected) {
     const path = d3.geoPath();
     svg_.selectAll('*').remove();
@@ -210,6 +242,20 @@ function updateChloroplethStates(svg_, winningParties, yearSelected) {
         })
 }
 
+function stopSimulations() {
+    simulationLarge.stop();
+    simulationSmall.stop();
+}
+
+function clean() {
+    heroSvg.selectAll('*').remove();
+    tooltip.style("opacity", 0);
+    if (simulationLarge){
+        stopSimulations();
+    }
+}
+
+// Rendering functions
 function createHistoricalCholoropleth() {
     let yearSelected = "2016";
 
@@ -392,6 +438,7 @@ function createDorlingCartogram() {
         .attr('y1', 20)
         .attr('y2', 70)
         .attr('stroke', 'black')
+        .attr('stroke-width', '2')
         .attr('stroke-dasharray', '3 3');
 
     svg.append('text')
@@ -416,41 +463,19 @@ function createSwingStatesChloropleth() {
 }
 
 function createHistoricalVotingChart() {
-    let winnersPerYearPerState_ = {};
-    let winnersGrid = [];
-
-    winningParties_.forEach((yearEntry) => {
-        let year_ = yearEntry[0];
-
-        yearEntry[1].forEach((stateEntry) => {
-            let state_ = stateEntry[1].state_name;
-            let winner = stateEntry[1].winner == 'DEMOCRAT' ? 'D' : stateEntry[1].winner == 'REPUBLICAN' ? 'R' : 'O';
-
-            if (!winnersPerYearPerState_[state_]) {
-                winnersPerYearPerState_[state_] = {};
-            }
-
-            if (!winnersPerYearPerState_[state_][year_]) {
-                winnersPerYearPerState_[state_][year_] = '';
-            }
-
-            winnersPerYearPerState_[state_][year_] = winner;
-        })
-    })
-
-    Object.keys(winnersPerYearPerState_).forEach((state__) => {
-        Object.keys(winnersPerYearPerState_[state__]).forEach((year__) => {
-            winnersGrid.push([state__, year__, winnersPerYearPerState_[state__][year__]]);
-        })
-    })
-
     let years = Object.keys(winningParties);
     let state_names = Object.keys(winnersPerYearPerState_);
 
     let y = d3.scaleBand().domain(years).range([chart_margin.top, height - chart_margin.bottom * 2.5]).paddingInner(1);
     let x = d3.scalePoint().domain(state_names).range([chart_margin.left * 1.5, width - chart_margin.right]);
 
-    const xAxisGroup = heroSvg.append("g")
+    heroSvg.append("g")
+        .attr('transform', `translate(-20, 0)`)
+        .classed('chart-container', true);
+
+    let container = heroSvg.select('.chart-container');
+
+    const xAxisGroup = container.append("g")
         .attr("transform", `translate(-12, ${(height - chart_margin.bottom * 2.1)})`)
         .classed("axis", true)
         .call(d3.axisBottom(x));
@@ -459,12 +484,12 @@ function createHistoricalVotingChart() {
         .attr("transform", "rotate(-90)")
         .attr("text-anchor", "end");
 
-    heroSvg.append("g")
+    container.append("g")
         .attr("transform", `translate(${chart_margin.left * 1.2}, 0)`)
         .classed("axis", true)
         .call(d3.axisLeft(y));
 
-    heroSvg.selectAll(".historical-vote")
+    container.selectAll(".historical-vote")
         .data(winnersGrid)
         .enter()
         .append("circle")
@@ -476,7 +501,7 @@ function createHistoricalVotingChart() {
         .classed('red-state', d => d[2] == 'R')
         .classed('other-state', d => d[2] == 'O');
 
-    heroSvg
+    container
         .selectAll('.historical-vote')
         .on("mouseover", (event, d) => {
             tooltip.style("opacity", 0.9);
@@ -499,33 +524,6 @@ function createHistoricalVotingChart() {
 }
 
 function createHistoricalStaticVotingChart() {
-    let winnersPerYearPerState_ = {};
-    let winnersGrid = [];
-
-    winningParties_.forEach((yearEntry) => {
-        let year_ = yearEntry[0];
-
-        yearEntry[1].forEach((stateEntry) => {
-            let state_ = stateEntry[1].state_name;
-            let winner = stateEntry[1].winner == 'DEMOCRAT' ? 'D' : stateEntry[1].winner == 'REPUBLICAN' ? 'R' : 'O';
-
-            if (!winnersPerYearPerState_[state_]) {
-                winnersPerYearPerState_[state_] = {};
-            }
-
-            if (!winnersPerYearPerState_[state_][year_]) {
-                winnersPerYearPerState_[state_][year_] = '';
-            }
-
-            winnersPerYearPerState_[state_][year_] = winner;
-        })
-    })
-
-    Object.keys(winnersPerYearPerState_).forEach((state__) => {
-        Object.keys(winnersPerYearPerState_[state__]).forEach((year__) => {
-            winnersGrid.push([state__, year__, winnersPerYearPerState_[state__][year__]]);
-        })
-    })
 
     let years = Object.keys(winningParties);
 
@@ -537,7 +535,7 @@ function createHistoricalStaticVotingChart() {
     let xStatic = d3.scaleBand().domain(staticStates).range([chart_margin.left * 1.5, width / 2 - chart_margin.right]);
 
     heroSvg.append("g")
-        .attr('transform', `translate(${width/4}, 0)`)
+        .attr('transform', `translate(${width / 4}, 0)`)
         .classed('chart-container', true);
 
     let container = heroSvg.select('.chart-container');
@@ -558,6 +556,72 @@ function createHistoricalStaticVotingChart() {
 
     container.selectAll(".historical-vote")
         .data(winnersGrid.filter(d => staticStates.includes(d[0])))
+        .enter()
+        .append("circle")
+        .classed("historical-vote", true)
+        .attr('r', 5)
+        .attr('cx', d => xStatic(d[0]))
+        .attr('cy', d => y(d[1]))
+        .classed('blue-state', d => d[2] == 'D')
+        .classed('red-state', d => d[2] == 'R')
+        .classed('other-state', d => d[2] == 'O');
+
+    container
+        .selectAll('.historical-vote')
+        .on("mouseover", (event, d) => {
+            tooltip.style("opacity", 0.9);
+            tooltip.html(`${d[0]} voted ${d[2] == 'D' ? 'Democrat' : d[2] == 'R' ? 'Republican' : 'Other'} in ${d[1]}`);
+
+            d3.select(event.target)
+                .style('stroke-width', 1)
+                .style('stroke', 'black');
+        })
+        .on("mouseout", function (event, d) {
+            tooltip.style("opacity", 0);
+
+            d3.select(event.target)
+                .style('stroke-width', 0);
+        })
+        .on("mousemove", function (event, d) {
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+}
+
+function createRecentStaticVotingChart() {
+
+    let years = Object.keys(winningParties).filter((d) => +d > 1996);
+
+    let y = d3.scaleBand().domain(years).range([chart_margin.top * 5, height - chart_margin.bottom * 2.5]).paddingInner(1);
+
+    let changingStates = ['ARIZONA', 'COLORADO', 'FLORIDA', 'GEORGIA', 'INDIANA', 'IOWA', 'MICHIGAN', 'NEVADA', 'NEW HAMPSHIRE', 'NEW MEXICO', 'NORTH CAROLINA', 'OHIO', 'PENNSYLVANIA', 'VIRGINIA', 'WISCONSIN']
+
+    let staticStates = Object.keys(winnersPerYearPerState_).filter(d => !changingStates.includes(d));
+
+    let xStatic = d3.scaleBand().domain(staticStates).range([chart_margin.left * 1.5, width - chart_margin.right]);
+
+    heroSvg.append("g")
+        .classed('chart-container', true);
+
+    let container = heroSvg.select('.chart-container')
+        .attr('transform', `translate(-10, -50)`);
+
+    const xAxisGroupStatic = container.append("g")
+        .attr("transform", `translate(-23, ${(height - chart_margin.bottom * 2)})`)
+        .classed("axis", true)
+        .call(d3.axisBottom(xStatic));
+
+    xAxisGroupStatic.selectAll('text')
+        .attr("transform", "rotate(-90)")
+        .attr("text-anchor", "end");
+
+    container.append("g")
+        .attr("transform", `translate(${chart_margin.left * 1.2}, 0)`)
+        .classed("axis", true)
+        .call(d3.axisLeft(y));
+
+    container.selectAll(".historical-vote")
+        .data(winnersGrid.filter(d => staticStates.includes(d[0]) && +d[1] > 1996))
         .enter()
         .append("circle")
         .classed("historical-vote", true)
@@ -614,29 +678,29 @@ function createCountyVotingChart() {
         .domain(d3.extent(processedResults.filter(d => d.winner == 'R' && d.total_votes > lowerLim), d => d.per_point_diff))
         .range([0.52 * width, 0.9 * width]);
 
-    const simulationDecay = 0.125;
-
-    let simulationLarge = d3.forceSimulation(processedResults.filter(d => d.total_votes > 100000))
+    simulationLarge = d3.forceSimulation(processedResults.filter(d => d.total_votes > 100000))
         .force("charge", d3.forceManyBody().strength(1))
         .force("collide", d3.forceCollide().radius(d => radiusScale(d.total_votes) + 2))
         .force("x", d3.forceX((d) => {
             return d.winner == 'D' ? xScaleDem(d.per_point_diff) : xScaleRep(d.per_point_diff)
         }).strength(2))
-        .force("y", d3.forceY(0.25 * height).strength(2))
-        .alphaDecay(simulationDecay)
+        .force("y", d3.forceY(0.275 * height).strength(0.3))
         .on("tick", tickedLarge);
 
-    let simulationSmall = d3.forceSimulation(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
+    simulationSmall = d3.forceSimulation(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
         .force("charge", d3.forceManyBody().strength(1))
         .force("collide", d3.forceCollide().radius(d => radiusScale(d.total_votes) + 2))
         .force("x", d3.forceX((d) => {
             return d.winner == 'D' ? xScaleDem(d.per_point_diff) : xScaleRep(d.per_point_diff)
         }).strength(2))
-        .force("y", d3.forceY(0.75 * height).strength(2))
-        .alphaDecay(simulationDecay)
+        .force("y", d3.forceY(0.75 * height).strength(1.5))
         .on("tick", tickedSmall);
 
+    const skipTicks = 10;
+
     function tickedLarge() {
+        simulationLarge.tick(skipTicks);
+
         heroSvg
             .selectAll('.highVotes')
             .data(processedResults.filter(d => d.total_votes > 100000))
@@ -675,6 +739,8 @@ function createCountyVotingChart() {
     }
 
     function tickedSmall() {
+        simulationSmall.tick(skipTicks);
+
         heroSvg
             .selectAll('.lessVotes')
             .data(processedResults.filter(d => d.total_votes <= 100000 && d.total_votes > lowerLim))
@@ -693,7 +759,7 @@ function createCountyVotingChart() {
                 tooltip.html(`${d.winner} has a ${Math.abs(d.per_point_diff)}% winning margin`);
 
                 d3.select(event.target)
-                    .style('stroke-width', 2)
+                    .style('stroke-width', 1)
                     .style('stroke', 'black');
             })
             .on("mouseout", function (event, d) {
@@ -795,6 +861,6 @@ function createCountyVotingChart() {
     heroSvg.append('text')
         .text("Counties with Total Votes < 100k")
         .attr('x', 0.5 * width)
-        .attr('y', height - 50)
+        .attr('y', height - 34)
         .classed('distribution-title', true);
 }
